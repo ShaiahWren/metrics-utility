@@ -2,11 +2,10 @@
 # Code for building the spreadsheet
 ######################################
 import time
-
 from datetime import timedelta
 
 import pandas as pd
-
+from django.utils import timezone
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -208,12 +207,12 @@ class ReportCCSPv2(Base):
         since, until = None, None
 
         if self.extra_params['opt_since']:
-            since = self.extra_params['opt_since'].replace(tzinfo=None)
+            since = self.extra_params['opt_since']
         elif self.extra_params['month_since']:
-            since = self.extra_params['month_since'].replace(tzinfo=None)
+            since = self.extra_params['month_since'].replace(tzinfo=timezone.utc)  # Make timezone-aware
 
         if self.extra_params['opt_until']:
-            until = self.extra_params['opt_until'].replace(tzinfo=None) + timedelta(days=1)
+            until = self.extra_params['opt_until']  # Removed + timedelta(days=1)
         elif self.extra_params['month_until']:
             until = self.extra_params['month_until'].replace(tzinfo=None)
 
@@ -227,16 +226,16 @@ class ReportCCSPv2(Base):
         for file_name in df['file_name'].unique().tolist():
             start = {
                 'collection_start_timestamp': None,
-                'since': since,
-                'until': since,  # NOT until
+                'since': pd.Timestamp(since) if since else None,  # Convert to Timestamp
+                'until': pd.Timestamp(since) if since else None,  # Convert to Timestamp
                 'file_name': file_name,
                 'status': 'ok',
                 'elapsed': None,
             }
             end = {
                 'collection_start_timestamp': None,
-                'since': until,  # NOT since
-                'until': until,
+                'since': pd.Timestamp(until) if until else None,  # Convert to Timestamp
+                'until': pd.Timestamp(until) if until else None,  # Convert to Timestamp
                 'file_name': file_name,
                 'status': 'ok',
                 'elapsed': None,
@@ -247,6 +246,10 @@ class ReportCCSPv2(Base):
 
         # skip failed collects
         df = df[df['status'] == 'ok']
+
+        # Convert 'since' and 'until' columns to Timestamp before sorting
+        df['since'] = pd.to_datetime(df['since'])
+        df['until'] = pd.to_datetime(df['until'])
 
         # find gaps between until -> next since
         df = df.sort_values(['file_name', 'since', 'until']).reset_index(drop=True)

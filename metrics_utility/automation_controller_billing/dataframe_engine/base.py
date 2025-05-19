@@ -3,7 +3,6 @@ import logging
 
 from dateutil.relativedelta import relativedelta
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -103,8 +102,8 @@ class Base:
             beginning_of_the_month = self.extra_params.get('since_date')
             end_of_the_month = self.extra_params.get('until_date')
         else:
-            beginning_of_the_month = self.month.replace(day=1)
-            end_of_the_month = beginning_of_the_month + relativedelta(months=1) - relativedelta(days=1)
+            beginning_of_the_month = self.month.date()
+            end_of_the_month = (self.month + relativedelta(months=1) - relativedelta(days=1)).date()
 
         dates_list = list_dates(start_date=beginning_of_the_month, end_date=end_of_the_month, granularity='daily')
         return dates_list
