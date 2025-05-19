@@ -1,9 +1,11 @@
 import datetime
 import json
+
 from datetime import timezone
 from itertools import chain
 
 import pandas as pd
+
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
 
@@ -72,7 +74,9 @@ def parse_date_param(date_option):
     elif date_option and (date_option.endswith('mo') or date_option.endswith('month') or date_option.endswith('months')):
         suffix_length = len('mo') if date_option.endswith('mo') else len('month') if date_option.endswith('month') else len('months')
         months_ago = int(date_option[0:-suffix_length])
-        parsed_date = (now_utc - relativedelta(months=months_ago)).replace(hour=0, minute=0, second=0, microsecond=0)  # Start of month/relative time UTC
+        parsed_date = (now_utc - relativedelta(months=months_ago)).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )  # Start of month/relative time UTC
     elif date_option and date_option.endswith('m'):
         minutes_ago = int(date_option[0:-1])
         parsed_date = now_utc - datetime.timedelta(minutes=minutes_ago)  # Already timezone-aware

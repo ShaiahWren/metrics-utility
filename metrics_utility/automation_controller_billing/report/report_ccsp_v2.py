@@ -2,9 +2,11 @@
 # Code for building the spreadsheet
 ######################################
 import time
+
 from datetime import timedelta
 
 import pandas as pd
+
 from django.utils import timezone
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side

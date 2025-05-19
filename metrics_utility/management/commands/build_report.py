@@ -1,26 +1,20 @@
 import datetime
 import logging
 import os
+
 from datetime import timezone
 
 from dateutil.parser import parse as date_parse
 from dateutil.relativedelta import relativedelta
 from django.core.management.base import BaseCommand
 
-from metrics_utility.automation_controller_billing.dataframe_engine.factory import \
-    Factory as DataframeEngineFactory
-from metrics_utility.automation_controller_billing.extract.factory import \
-    Factory as ExtractorFactory
-from metrics_utility.automation_controller_billing.helpers import \
-    parse_date_param
-from metrics_utility.automation_controller_billing.report.factory import \
-    Factory as ReportFactory
-from metrics_utility.automation_controller_billing.report_saver.factory import \
-    Factory as ReportSaverFactory
-from metrics_utility.exceptions import (BadRequiredEnvVar, BadShipTarget,
-                                        MissingRequiredEnvVar)
-from metrics_utility.management.validation import (
-    handle_directory_ship_target, handle_s3_ship_target)
+from metrics_utility.automation_controller_billing.dataframe_engine.factory import Factory as DataframeEngineFactory
+from metrics_utility.automation_controller_billing.extract.factory import Factory as ExtractorFactory
+from metrics_utility.automation_controller_billing.helpers import parse_date_param
+from metrics_utility.automation_controller_billing.report.factory import Factory as ReportFactory
+from metrics_utility.automation_controller_billing.report_saver.factory import Factory as ReportSaverFactory
+from metrics_utility.exceptions import BadRequiredEnvVar, BadShipTarget, MissingRequiredEnvVar
+from metrics_utility.management.validation import handle_directory_ship_target, handle_s3_ship_target
 from metrics_utility.metric_utils import get_optional_collectors
 
 
@@ -87,9 +81,7 @@ class Command(BaseCommand):
         opt_until = options.get('until') or None
         if opt_until is None:
             opt_until = datetime.datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-            self.logger.info(
-                f"--until parameter not provided, defaulting to: {opt_until}"
-            )
+            self.logger.info(f'--until parameter not provided, defaulting to: {opt_until}')
         else:
             opt_until = parse_date_param(opt_until)
 
@@ -110,9 +102,7 @@ class Command(BaseCommand):
             extra_params['since_date'] = opt_since.date()
             extra_params['until_date'] = opt_until.date() if opt_until else datetime.datetime.now(timezone.utc).date()
 
-            extra_params['report_period_range'] = (
-                f'{extra_params["since_date"]}, {extra_params["until_date"]}'
-            )
+            extra_params['report_period_range'] = f'{extra_params["since_date"]}, {extra_params["until_date"]}'
 
             extra_params['report_spreadsheet_destination_path'] = os.path.join(
                 extractor.get_report_path(extra_params['until_date']),
@@ -124,30 +114,24 @@ class Command(BaseCommand):
                 f'{extra_params["report_type"]}-{opt_month}.xlsx',
             )
 
-        report_saver_engine = ReportSaverFactory(
-            ship_target, extra_params=extra_params
-        ).create()
+        report_saver_engine = ReportSaverFactory(ship_target, extra_params=extra_params).create()
 
         if report_saver_engine.report_exist() and not opt_force:
             # If the monthly report already exists, skip the generation
             self.logger.info(
-                "Skipping report generation, report: "
-                f"{report_saver_engine.report_spreadsheet_destination_path} already exists. "
-                "Use --force option to override the report."
+                'Skipping report generation, report: '
+                f'{report_saver_engine.report_spreadsheet_destination_path} already exists. '
+                'Use --force option to override the report.'
             )
             return
 
-        report_dataframe = DataframeEngineFactory(
-            extractor=extractor, month=month, extra_params=extra_params
-        ).create()
+        report_dataframe = DataframeEngineFactory(extractor=extractor, month=month, extra_params=extra_params).create()
 
         if all(item is None or item.empty for item in report_dataframe):
             if opt_since is not None:
-                self.logger.info(
-                    f'No billing data for input date range {extra_params["since_date"]}--{extra_params["until_date"]}'
-                )
+                self.logger.info(f'No billing data for input date range {extra_params["since_date"]}--{extra_params["until_date"]}')
             else:
-                self.logger.info(f"No billing data for month {opt_month}")
+                self.logger.info(f'No billing data for month {opt_month}')
             return
 
         report_engine = ReportFactory(
@@ -160,9 +144,7 @@ class Command(BaseCommand):
 
         # Save the report to the configured destination
         report_saver_engine.save(report_spreadsheet)
-        self.logger.info(
-            f"Report generated into {ship_target}: {report_saver_engine.report_spreadsheet_destination_path}"
-        )
+        self.logger.info(f'Report generated into {ship_target}: {report_saver_engine.report_spreadsheet_destination_path}')
 
     def _handle_ship_target(self, ship_target):
         if ship_target == 'controller_db':
