@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 
 from helpers import (
     create_hosts,
+    create_instance,
     create_inventory,
     create_job,
     create_job_events,
@@ -70,6 +71,9 @@ def fill_init_data(host_count=10, task_count=50, template_count=10, unique_suffi
 
     # Create hosts (depends on inventory)
     host_ids = create_hosts(inventory_id=inventory_id, host_count=host_count, unique_suffix=unique_suffix)
+
+    # Create one controller instance (needed by controller_version_service collector)
+    create_instance()
 
     print('=== Initial data created ===')
     print(f'Organization: Perf Test Organization {unique_suffix} (ID: {org_id})')

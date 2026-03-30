@@ -723,5 +723,27 @@ def create_job_events(job_id, host_ids, task_count=50, job_index=0, job_created=
     print(f'Created {len(values)} job events ({task_count} tasks x {host_count} hosts)')
 
 
+def create_instance(version='4.5.0', node_type='control'):
+    """Create a controller instance row for controller_version_service."""
+    instance_uuid = str(uuid.uuid4())
+    sql = f"""
+    INSERT INTO main_instance (
+        created, modified, uuid, hostname, version, node_type,
+        enabled, managed_by_policy, managed, ip_address,
+        cpu, memory, cpu_capacity, mem_capacity,
+        capacity, capacity_adjustment, errors, node_state
+    )
+    VALUES (
+        NOW(), NOW(), '{instance_uuid}', 'perf-test-controller', '{version}', '{node_type}',
+        TRUE, TRUE, FALSE, '',
+        0, 0, 0, 0,
+        0, 1.0, '', 'ready'
+    )
+    RETURNING id;
+    """
+    output = run(sql)
+    return parse_id(output)
+
+
 if __name__ == '__main__':
     delete_all()
